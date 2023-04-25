@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>カーソルどこ</title>
+    </head>
+    <body>
+        <img id="arrow" style="position:absolute;" src="arrow.jpg">
+        <script>
+                let arrow = document.getElementById("arrow");
+                document.addEventListener('mousemove', logKey);
+
+                function logKey(e) {
+                    arrow.style.top=e.clientY.toString()+"px";
+                    arrow.style.left=e.clientX.toString()+"px";
+                }
+        </script>
+    </body>
+</html>
