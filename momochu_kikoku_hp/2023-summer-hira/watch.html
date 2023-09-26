@@ -15,8 +15,8 @@
     <script>
       function animate(){
         console.log("animating")
-        document.getElementById("lnk").style.top=Math.random() * window.outerHeight],
-        document.getElementById("lnk").style.left: [0, Math.random() * window.outerWidth],
+        document.getElementById("lnk").style.top=(Math.random() * window.outerHeight).toString()+"px";
+        document.getElementById("lnk").style.left=(Math.random() * window.outerWidth).toString()+"px";
       }
       setInterval(animate,2500)
     </script>
