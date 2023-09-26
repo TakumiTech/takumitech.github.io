@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ひらパー振り返り動画の視聴</title>
+    <meta name="robots" content="none">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic&family=Cherry+Bomb+One&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <h1>確認</h1>
+    <p>ほんとうに どうがを みますか</p>
+    <a href="https://youtu.be/2OnGOqsP0Q8" id="lnk" style="position:absolute;"><button>はい</button></a>
+    <script>
+      while (true){
+      document.getElementById("lnk").animate(
+        {
+          top: [0, Math.random() * window.outerHeight],
+          left: [0, Math.random() * window.outerWidth],
+        },{
+          // 終了時の状態で止める
+          fill: "forwards",
+          // 3000ミリ秒（＝3秒）かけてアニメーション
+          duration: 3000
+        }
+      );}
+    </script>
+  </body>
+</html>
