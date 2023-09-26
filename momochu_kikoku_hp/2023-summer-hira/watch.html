@@ -15,17 +15,9 @@
     <script>
       function animate(){
         console.log("animating")
-      document.getElementById("lnk").animate(
-        {
-          top: [0, Math.random() * window.outerHeight],
-          left: [0, Math.random() * window.outerWidth],
-        },{
-          // 終了時の状態で止める
-          fill: "forwards",
-          // 2000ミリ秒（＝2秒）かけてアニメーション
-          duration: 2000
-        }
-      );}
+        document.getElementById("lnk").style.top=Math.random() * window.outerHeight],
+        document.getElementById("lnk").style.left: [0, Math.random() * window.outerWidth],
+      }
       setInterval(animate,2500)
     </script>
   </body>
