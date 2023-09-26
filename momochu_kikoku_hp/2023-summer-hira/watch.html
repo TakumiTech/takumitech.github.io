@@ -13,7 +13,7 @@
     <p>ほんとうに どうがを みますか</p>
     <a href="https://youtu.be/2OnGOqsP0Q8" id="lnk" style="position:absolute;"><button>はい</button></a>
     <script>
-      while (true){
+      function animate(){
       document.getElementById("lnk").animate(
         {
           top: [0, Math.random() * window.outerHeight],
@@ -21,10 +21,11 @@
         },{
           // 終了時の状態で止める
           fill: "forwards",
-          // 3000ミリ秒（＝3秒）かけてアニメーション
-          duration: 3000
+          // 2000ミリ秒（＝2秒）かけてアニメーション
+          duration: 2000
         }
       );}
+      setInterval(animate,2500)
     </script>
   </body>
 </html>
