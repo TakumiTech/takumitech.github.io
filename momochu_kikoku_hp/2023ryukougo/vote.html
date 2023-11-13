@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
     <head>
@@ -7,11 +6,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>1-4流行語大賞 投票</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     </head>
     <body>
         <div class="container-fluid p-5 bg-primary text-white text-center">
-            <h1>1-4流行語大賞 投票</h1>
+            <h1><noscript>あなたのブラウザではJavaScriptがONじゃないから実際動かないけど見た目はあってる<br></noscript>1-4流行語大賞 投票</h1>
         </div>
 
         <div class="container pt-2 pb-3">
@@ -29,24 +29,41 @@
             <label for="2" class="form-label">あなたが選ぶ「1の4流行語大賞」第2位</label>
             <input name="entry.1004227216" type="text" class="form-control" id="2" aria-required="false">
 
-            <label for="3" class="form-label">あなたが選ぶ「1の4流行語大賞」第3位</label>
+            <label for="3" class="form-label">あなたが選ぶ「1の4流行語大賞」第3位または同率2位</label>
             <input name="entry.2013122746" type="text" class="form-control" id="3" required aria-required="false">
-
+            
+            <div class="form-text">この順位は、集計時同じ扱いです。</div>
             <hr>
             <label for="id" class="form-label">投票ID</label>
             <input name="entry.225287804" type="text" class="form-control" id="id" required value="" aria-label="ID" readonly aria-describedby="aboutid">
             <div id="aboutid" class="form-text">このIDは名前の代わりに投票に関連づけられ、投票の取り消しなどを行いたい場合に必要です。このIDがないと投票の取り消しや変更などが一切できないので、ご注意ください。
-            <a class="btn-link" onclick="changeid()">このID嫌 (?)</a>
+            <a class="btn-link" onclick="changeid()">このID嫌</a>
             </div>
             </form><hr>
-            <button type="button" class="btn btn-primary mx-auto d-block" style="width:80%;" onclick="send()">送信</button>
+            <button type="button" class="btn btn-primary mx-auto d-block" style="width:80%;" onclick="send()"><i class="bi bi-send"></i> 送信</button>
         </div>
+
+        <div class="modal" tabindex="-1" id="norequire">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title"><i class="bi bi-exclamation-circle-fill"></i> エラー</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>必須項目がすべて入力されていません。</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>                </div>
+              </div>
+            </div>
+          </div>
 
         <div class="modal" tabindex="-1" id="sendmodal" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title">送信完了</h5>
+                  <h5 class="modal-title"><i class="bi bi-check-lg"></i> 送信完了</h5>
                 </div>
                 <div class="modal-body">
                   <p>「1の4流行語大賞」への投票を送信しました。<br>投票ありがとうございます。<br>このページは閉じて構いません。</p>
@@ -66,20 +83,17 @@
             }
             changeid()
             function send(){
+                if (document.getElementById("name").value==="" || document.getElementById("1").value==="" || document.getElementById("id").value==="") {
+                    const myModal = new bootstrap.Modal(document.getElementById('norequire'));
+                    myModal.show();
+                } else {
                 document.getElementById("namef").submit();
                 document.getElementById("contentf").submit();
                 const myModal = new bootstrap.Modal(document.getElementById('sendmodal'));
                 myModal.show()
+                }
             }
         </script>
+        <div class="pb-3"><i class="bi bi-c-circle"></i> Takumi S. All rights reserved.</div>
     </body>
-        <!--POST
-            form action name-> https://docs.google.com/forms/u/0/d/e/1FAIpQLSfKRVBPM7U-HTpqZAei6zEmqHVu51hN_X8nWgrFnHhFjDAhtA/formResponse
-             input name-> entry.1973322955
-            form act content-> https://docs.google.com/forms/u/0/d/e/1FAIpQLSdmNufbIfBrtLMv63vKXYW5U2XFpOu8Wa2s17iuztpyqQ3h9g/formResponse
-             id->  entry.225287804
-             no1-> entry.1573968799
-             no2-> entry.1004227216
-             no3-> entry.2013122746
-        -->
 </html>
