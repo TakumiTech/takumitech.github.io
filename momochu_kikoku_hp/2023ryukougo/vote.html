@@ -23,17 +23,9 @@
             </form><form action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSdmNufbIfBrtLMv63vKXYW5U2XFpOu8Wa2s17iuztpyqQ3h9g/formResponse" method="POST" target="frameb" id="contentf">
             <label for="1" class="form-label"><i class="bi bi-award-fill"></i> あなたが選ぶ「1の4流行語大賞」第1位はズバリ!</label>
             <input name="entry.1573968799" type="text" class="form-control form-control-lg" id="1" required aria-required="true">
-            
-            <hr>
-            <p style="text-align: center;"><b>以下任意</b></p>
 
             <label for="2" class="form-label">あなたが選ぶ「1の4流行語大賞」第2位</label>
-            <input name="entry.1004227216" type="text" class="form-control" id="2" aria-required="false">
-
-            <label for="3" class="form-label">あなたが選ぶ「1の4流行語大賞」第3位または同率2位</label>
-            <input name="entry.2013122746" type="text" class="form-control" id="3" required aria-required="false">
-            
-            <div class="form-text">この順位は、集計時同じ扱いです。</div>
+            <input name="entry.1004227216" type="text" class="form-control" id="2" aria-required="false">  
             <hr>
             <label for="id" class="form-label">投票ID</label>
             <input name="entry.225287804" type="text" class="form-control" id="id" required value="" aria-label="ID" readonly aria-describedby="aboutid">
@@ -84,7 +76,7 @@
             }
             changeid()
             function send(){
-                if (document.getElementById("name").value==="" || document.getElementById("1").value==="" || document.getElementById("id").value==="") {
+                if (document.getElementById("name").value==="" || document.getElementById("1").value==="" || document.getElementById("2").value==="" || document.getElementById("id").value==="") {
                     const myModal = new bootstrap.Modal(document.getElementById('norequire'));
                     myModal.show();
                 } else {
