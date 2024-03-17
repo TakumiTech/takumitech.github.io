@@ -1,0 +1,100 @@
+body{margin:0;}
+#container{
+    width:100vw;
+    height:100vh;
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+a.btn {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+    flex-direction: column;
+	position: relative;
+	overflow: hidden;
+	text-decoration: none;
+	height: 20vh;
+	width: 60vw;
+	margin: auto;
+	padding: 0 4rem;
+	border-radius: 100vw;
+	background: rgb(170,170,170);
+    background: linear-gradient(120deg, rgba(170,170,170,1) 0%, rgba(136,136,136,1) 35%, rgba(106,110,120,1) 100%);
+	background-size: 400%;
+	color: #fff;
+    transition: all 0.475s;
+    font-size:2rem;
+    font-family: "Zen Maru Gothic", "BIZ UDPGothic","ヒラギノ丸ゴ Pro W4","ヒラギノ丸ゴ Pro","Hiragino Maru Gothic Pro",sans-serif;
+    text-align: center;
+}
+a.btn:hover::before {
+  transform: scaleX(1);
+}
+a.btn:hover {
+	color: #000;
+}
+a.btn span,small {
+  position: relative;
+  z-index: 1;
+}
+a.btn small{
+    font-size: 1rem;
+}
+a.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  width: 100%;
+  height: inherit;
+  border-radius: inherit;
+  background: rgb(255,243,218);
+  background: linear-gradient(82deg, rgba(255,243,218,1) 10%, rgba(254,201,87,1) 80%);
+  transition: all 0.475s;
+}
+
+@media screen and (max-width:400px){ /*スマホ*/
+    #long-1::after{
+        content:"読み込みが早い"
+    }
+    #long-2::after,#long-3::after{
+        content:'4K未対応';
+    }
+    #long-4::after{
+        content:'読み込み異常に遅い';
+    }
+}
+
+@media screen and (min-width:401px) and (max-width:1023px){ /*スマホ横*/
+    #long-1::after{
+        content:"読み込みが早く、画質調節可能"
+    }
+    #long-2::after,#long-3::after{
+        content:'4K未対応';
+    }
+    #long-4::after{
+        content:'読み込み異常に遅い';
+    }
+}
+@media screen and (min-width:1024px){ /*PC*/
+    a.btn{
+        font-size:3rem;
+    }
+    a.btn small{
+        font-size: 1.5rem;
+    }
+    #long-1::after{
+        content:"画質調節ができるため読み込みが圧倒的に早くおすすめ。4K対応。"
+    }
+    #long-2::after,#long-3::after{
+        content:"画質調節ができますが4K画質で見れない"
+    }
+    #long-4::after{
+        content:'自分 (清水) で作りましたが必ず最高画質で読み込まれるので、自宅の光回線でも読み込むのに1分～2分かかりました。';
+    }
+}
