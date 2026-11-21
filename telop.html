@@ -153,7 +153,7 @@ function renderTexts(){$('#tx').innerHTML=S.texts.map((t,i)=>`<div class="card${
  <label style="grid-column:span 2">font-family（CSSの値をそのまま入力）<input list="fl" data-k="font" value="${esc(t.font)}" placeholder="例: 'Yu Mincho', serif"></label>
  <label>揃え<select data-k="align">${['left','center','right'].map(a=>`<option${a==t.align?' selected':''}>${a}</option>`).join('')}</select></label>
  <label>太字<input type="checkbox" data-k="bold"${t.bold?' checked':''}></label><label>ドロップシャドウ<input type="checkbox" data-k="sh"${t.sh?' checked':''}></label>
- ${nf('sx','影X',t.sx)}${nf('sy','影Y',t.sy)}${nf('sb','影ぼかし',t.sb)}${nf('sd','影の濃さ(1-10)',t.sd)}<label>影色<input type="color" data-k="sc" value="${t.sc}"></label></div></div>`).join('')||'<small>テキスト要素が未追加です</small>';status()}
+ ${nf('sx','影X',t.sx)}${nf('sy','影Y',t.sy)}${nf('sb','影ぼかし',t.sb)}<label>影の濃さ(1-10)<input type="number" data-k="sd" value="${t.sd}" min="1" max="10"></label><label>影色<input type="color" data-k="sc" value="${t.sc}"></label></div></div>`).join('')||'<small>テキスト要素が未追加です</small>';status()}
 $('#tx').addEventListener('input',e=>{const t=e.target,c=t.closest('[data-i]');if(!t.dataset.k)return;const i=+c.dataset.i,o=S.texts[i];
  o[t.dataset.k]=t.type=='checkbox'?t.checked:t.type=='number'?(+t.value||0):t.value;
  if(t.dataset.k=='lines'){o.idx=Math.min(o.idx,o.lines.split('\n').length-1);c.querySelector('.ll').innerHTML=lineList(o,i)}push()});
