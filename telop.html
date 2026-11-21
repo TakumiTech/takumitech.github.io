@@ -228,6 +228,12 @@ const FONTS=['BIZ UDPGothic','BIZ UDPMincho Medium',
   "Arial",
   "Calibri",'sans-serif','serif','monospace'];
 
+const shadowOf=t=>{
+ const L=[],w=t.ow||0;
+ if(t.ol&&w>0){const n=Math.min(72,Math.max(16,Math.round(w*8)));
+  for(let k=0;k<n;k++){const a=2*Math.PI*k/n;L.push(`${(Math.cos(a)*w).toFixed(2)}px ${(Math.sin(a)*w).toFixed(2)}px 0 ${t.oc}`)}}
+ if(t.sh){const c=Math.max(1,Math.min(10,Math.round(t.sd)||1));for(let k=0;k<c;k++)L.push(`${t.sx}px ${t.sy}px ${t.sb}px ${t.sc}`)}
+ return L.length?L.join(','):'none'};
 function Stage(r){this.r=r;this.d=r.ownerDocument;this.L=new Map();this.T=new Map()}
 Stage.prototype.update=function(S){
  const r=this.r,d=this.d,f=S.fade+'ms';r.style.background=S.bg;
@@ -236,8 +242,7 @@ Stage.prototype.update=function(S){
  for(const[id,e]of this.L)if(!S.layers.some(l=>l.id==id)){e.remove();this.L.delete(id)}
  S.texts.forEach((t,i)=>{let e=this.T.get(t.id);if(!e){e=d.createElement('div');e._s=null;r.appendChild(e);this.T.set(t.id,e)}
   const tx={left:0,center:-50,right:-100}[t.align];
-  e.style.cssText+=`;position:absolute;left:${t.x}px;top:${t.y}px;transform:translate(${tx}%,-50%);z-index:${1000+i};font-family:${t.font};font-weight:${t.bold?700:400};font-size:${t.size}px;line-height:1.25;color:${t.color};text-align:${t.align};white-space:pre;text-shadow:${t.sh?Array(Math.max(1,Math.min(10,Math.round(t.sd)||1))).fill(`${t.sx}px ${t.sy}px ${t.sb}px ${t.sc}`).join(','):'none'};transition:opacity ${f}`;
-  const txt=(t.lines.split('\n')[t.idx]||'').replace(/\|/g,'\n');
+  e.style.cssText+=`;position:absolute;left:${t.x}px;top:${t.y}px;transform:translate(${tx}%,-50%);z-index:${1000+i};font-family:${t.font};font-weight:${t.bold?700:400};font-size:${t.size}px;line-height:1.25;color:${t.color};text-align:${t.align};white-space:pre;-webkit-text-stroke:0;text-shadow:${shadowOf(t)};transition:opacity ${f}`;  const txt=(t.lines.split('\n')[t.idx]||'').replace(/\|/g,'\n');
   if(e._s===null){e._s=txt;e.textContent=txt;e.style.opacity=t.on?1:0}
   else if(txt!==e._s){e._s=txt;
    if(t.on&&S.fade>0){/* クロスフェード：旧テキストの複製を消しながら、新テキストを同時に表示 */
@@ -281,7 +286,7 @@ $('#ly').onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const i=+
  renderLayers();push()};
 
 /* texts */
-function newText(){return{id:++uid,name:'テキスト',lines:'1行目\n2行目\n3行目',idx:0,x:960,y:920,size:64,color:'#ffffff',font:"'BIZ UDPGothic',sans-serif",align:'center',bold:true,sh:true,sx:3,sy:3,sb:6,sd:4,sc:'#000000',on:false}}
+function newText(){return{id:++uid,name:'テキスト',lines:'1行目\n2行目\n3行目',idx:0,x:960,y:920,size:64,color:'#ffffff',font:"'BIZ UDPGothic',sans-serif",align:'center',bold:true,sh:true,sx:3,sy:3,sb:6,sd:4,sc:'#000000',ol:false,ow:4,oc:'#000000',on:false}}
 $('#addT').onclick=()=>{S.texts.push(newText());S.active=S.texts.length-1;renderTexts();push()};
 const nf=(k,l,v)=>`<label>${l}<input type="number" data-k="${k}" value="${v}"></label>`;
 function lineList(t,i){return t.lines.split('\n').map((s,j)=>`<div class="ln${j==t.idx?' cur':''}" data-a="ln" data-j="${j}">${j+1}. ${esc(s)||'(空)'}</div>`).join('')}
@@ -292,7 +297,8 @@ function renderTexts(){$('#tx').innerHTML=S.texts.map((t,i)=>`<div class="card${
  <label style="grid-column:span 2">font-family（CSSの値をそのまま入力）<input list="fl" data-k="font" value="${esc(t.font)}" placeholder="例: 'Yu Mincho', serif"></label>
  <label>揃え<select data-k="align">${['left','center','right'].map(a=>`<option${a==t.align?' selected':''}>${a}</option>`).join('')}</select></label>
  <label>太字<input type="checkbox" data-k="bold"${t.bold?' checked':''}></label><label>ドロップシャドウ<input type="checkbox" data-k="sh"${t.sh?' checked':''}></label>
- ${nf('sx','影X',t.sx)}${nf('sy','影Y',t.sy)}${nf('sb','影ぼかし',t.sb)}<label>影の濃さ(1-10)<input type="number" data-k="sd" value="${t.sd}" min="1" max="10"></label><label>影色<input type="color" data-k="sc" value="${t.sc}"></label></div></details></div>`).join('')||'<small>テキスト要素が未追加です</small>';status()}
+ ${nf('sx','影X',t.sx)}${nf('sy','影Y',t.sy)}${nf('sb','影ぼかし',t.sb)}<label>影の濃さ(1-10)<input type="number" data-k="sd" value="${t.sd}" min="1" max="10"></label><label>影色<input type="color" data-k="sc" value="${t.sc}"></label>
+ <label>アウトライン<input type="checkbox" data-k="ol"${t.ol?' checked':''}></label>${nf('ow','線の幅',t.ow)}<label>線の色<input type="color" data-k="oc" value="${t.oc}"></label></div></details></div>`).join('')||'<small>テキスト要素が未追加です</small>';status()}
 $('#tx').addEventListener('input',e=>{const t=e.target,c=t.closest('[data-i]');if(!t.dataset.k)return;const i=+c.dataset.i,o=S.texts[i];
  o[t.dataset.k]=t.type=='checkbox'?t.checked:t.type=='number'?(+t.value||0):t.value;
  if(t.dataset.k=='lines'){o.idx=Math.min(o.idx,o.lines.split('\n').length-1);c.querySelector('.ll').innerHTML=lineList(o,i)}push()});
