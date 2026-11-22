@@ -197,6 +197,7 @@
     <h4>テキストページ</h4>
     1行＝1つの表示内容（歌詞など）。行内の「|」は改行になります。<br>
     行内に <span class="k">@1+</span> <span class="k">@1-</span> <span class="k">@1~</span> と書くと、その行に切り替わった時に、レイヤー1を表示／非表示／切替します（画面には出ません）。
+    <br><span class="k">//</span> から行末まではコメントです（画面には出ません）。
     <h4>ATEM Mini Proとの接続</h4>
     1. 右上「出力ウィンドウを開く」→ ウィンドウをPCの外部ディスプレイ(HDMI出力)へ移動し、F11で全画面。<br>
     <b>ダブルクリックでも全画面にできますが、ポップアップ時に解除されるので注意!!</b><br>
@@ -249,7 +250,7 @@
     for(const[id,e]of this.L)if(!S.layers.some(l=>l.id==id)){e.remove();this.L.delete(id)}
   S.texts.forEach((t,i)=>{let e=this.T.get(t.id);if(!e){e=d.createElement('div');e._s=null;r.appendChild(e);this.T.set(t.id,e)}
     const tx={left:0,center:-50,right:-100}[t.align];
-    e.style.cssText+=`;position:absolute;left:${t.x}px;top:${t.y}px;transform:translate(${tx}%,-50%);z-index:${1000+i};font-family:${t.font};font-weight:${t.bold?700:400};font-size:${t.size}px;line-height:1.25;color:${t.color};text-align:${t.align};white-space:pre;-webkit-text-stroke:0;text-shadow:${shadowOf(t)};transition:opacity ${f}`;  const txt=(t.lines.split('\n')[t.idx]||'').replace(CMD,'').trim().replace(/\|/g,'\n');
+    e.style.cssText+=`;position:absolute;left:${t.x}px;top:${t.y}px;transform:translate(${tx}%,-50%);z-index:${1000+i};font-family:${t.font};font-weight:${t.bold?700:400};font-size:${t.size}px;line-height:1.25;color:${t.color};text-align:${t.align};white-space:pre;-webkit-text-stroke:0;text-shadow:${shadowOf(t)};transition:opacity ${f}`;  const txt=(t.lines.split('\n')[t.idx]||'').replace(CMT,'').replace(CMD,'').trim().replace(/\|/g,'\n');
     if(e._s===null){e._s=txt;e.textContent=txt;e.style.opacity=t.on?1:0}
   else if(txt!==e._s){const old=e._s;e._s=txt;
    if(t.on&&ms>0&&!(old&&txt)){/* クロスフェード：旧テキストの複製を消しながら、新テキストを同時に表示 */
@@ -295,7 +296,8 @@
   function newText(){return{id:++uid,name:'テキスト',lines:'1行目\n2行目\n3行目',idx:0,x:960,y:920,size:64,color:'#ffffff',font:"'BIZ UDPGothic',sans-serif",align:'center',bold:true,sh:true,sx:3,sy:3,sb:6,sd:4,sc:'#000000',ol:false,ow:4,oc:'#000000',on:false}}
   $('#addT').onclick=()=>{S.texts.push(newText());S.active=S.texts.length-1;renderTexts();push()};
   const nf=(k,l,v)=>`<label>${l}<input type="number" data-k="${k}" value="${v}"></label>`;
-  function lineList(t,i){return t.lines.split('\n').map((s,j)=>`<div class="ln${j==t.idx?' cur':''}" data-a="ln" data-j="${j}">${j+1}. ${esc(s)||'(空)'}</div>`).join('')}
+  function lineList(t,i){return t.lines.split('\n').map((s,j)=>{const m=s.indexOf('//'),h=m<0?esc(s):esc(s.slice(0,m))+`<span style="color:#9fe57f">${esc(s.slice(m))}</span>`;
+  return `<div class="ln${j==t.idx?' cur':''}" data-a="ln" data-j="${j}">${j+1}. ${s?h:'(空)'}</div>`}).join('')}
   function renderTexts(){$('#tx').innerHTML=S.texts.map((t,i)=>`<div class="card${i==S.active?' act':''}" data-i="${i}">
   <div class="row"><b>${i+1}</b><input data-k="name" value="${esc(t.name)}"><button data-a="tog" class="${t.on?'on':''}">${t.on?'ON!':'OFF'}</button><button data-a="prev">◀</button><button data-a="next">▶</button><button data-a="del">✕</button></div>
   <div class="ll">${lineList(t,i)}</div><details${t.open?' open':''}><summary>設定</summary><textarea data-k="lines" rows="5">${esc(t.lines)}</textarea>
@@ -315,8 +317,8 @@
   else if(a=='prev')step(i,-1);else if(a=='next')step(i,1);else if(a=='ln'){const t=S.texts[i],j=+b.dataset.j;if(t.idx!=j){t.idx=j;runCmds(t)}}
   renderTexts();push()};
   $('#tx').addEventListener('toggle',e=>{const d=e.target.closest('details');if(d)S.texts[+d.closest('[data-i]').dataset.i].open=d.open},true);
-  const CMD=/@(\d+)([+\-~])/g;
-  function runCmds(t){const line=t.lines.split('\n')[t.idx]||'';
+  const CMD=/@(\d+)([+\-~])/g,CMT=/\/\/.*$/;
+  function runCmds(t){const line=(t.lines.split('\n')[t.idx]||'').replace(CMT,'');
   for(const m of line.matchAll(CMD)){const l=S.layers[m[1]-1];if(!l)continue;l.on=m[2]=='+'?true:m[2]=='-'?false:!l.on}
   renderLayers()}
   function step(i,d){const t=S.texts[i];if(!t)return;const o=t.idx;t.idx=Math.max(0,Math.min(t.lines.split('\n').length-1,t.idx+d));if(t.idx!==o)runCmds(t)}  function scrollCur(){document.querySelectorAll('#tx .ll').forEach(l=>{const c=l.querySelector('.cur');if(!c)return;
