@@ -1,347 +1,366 @@
-<!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
-<title>LIVE配信テロップシステム</title>
-<style>
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-  font:
-    13px/1.4 system-ui,
-    sans-serif;
-  background: #000;
-  color: #fff;
-  display: flex;
-  height: 100vh;
-}
-#L {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-#R {
-  width: 50vw;
-  padding: 0.5em;
-  overflow: auto;
-}
-.tabs {
-  display: flex;
-  gap: 3px;
-  padding: 4px 4px 0;
-}
-.tab {
-  padding: 8px 16px;
-  cursor: pointer;
-  background: #222;
-  color: #aaa;
-}
-.tab.on {
-  background: #555;
-  color: #fff;
-}
-.pane {
-  display: none;
-  flex: 1;
-  overflow: auto;
-  padding: 12px;
-  scrollbar-width: thin;
-  scrollbar-color: #666 #111;
-}
-.pane.on {
-  display: block;
-}
-button,input,select,textarea,label.btn {
-  font: inherit;
-  color: inherit;
-  background: #000;
-  border: 0.5px solid #777;
-  padding: 4px 8px;
-}
-button {
-  cursor: pointer;
-}
-button:hover,label.btn:hover {
-  background: #333;
-}
-button:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-button.on {
-  background: #b00;
-  color: #fff;
-}
-.card {
-  background: #111;
-  border: 0.5px solid #777;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-.card.act {
-  border: 2px solid #005cc8;
-}
-.row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.row input {
-  flex: 1;
-  min-width: 0;
-}
-textarea {
-  width: 100%;
-  resize: vertical;
-  font-family: inherit;
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-top: 6px;
-}
-.grid label {
-  display: flex;
-  flex-direction: column;
-  font-size: 11px;
-}
-.grid input,
-.grid select {
-  width: 100%;
-}
-.ll {
-  margin-top: 6px;
-  max-height: 160px;
-  overflow: auto;
-  border:1px solid #777;
-}
-.ln {
-  padding: 3px 8px;
-  cursor: pointer;
-  white-space: pre;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.ln:hover {
-  background: #333;
-}
-.ln.cur {
-  background: #005cc8;
-  color: #fff;
-}
-.th {
-  width: 64px;
-  height: 36px;
-  object-fit: contain;
-  background: repeating-conic-gradient(#555 0 25%, #333 0 50%) 0 0/12px 12px;
-  border-radius: 3px;
-}
-.k {
-  background: #444;
-  border-radius: 2px;
-  padding: 1px 6px;
-  font-size: 11px;
-}
-#pvw {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
-  overflow: hidden;
-  border: 1px solid #444;
-}
-#pv {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1920px;
-  height: 1080px;
-  transform-origin: 0 0;
-}
-h4 {
-  margin: 14px 0 6px;
-}
-small,
-.help {
-  font-size: 12px;
-  line-height: 1.7;
-}
-summary{cursor:pointer;margin-top:6px;user-select:none}
-</style></head><body>
-<div id="L">
- <div class="tabs"><div class="tab on" data-t="p1">レイヤー</div><div class="tab" data-t="p2">テキスト</div><div class="tab" data-t="p3">出力設定・操作説明</div></div>
- <div class="pane on" id="p1">
-  <div class="row"><label class="btn" style="cursor:pointer">＋ 画像を追加（複数可・PNG透過）<input type="file" id="fi" accept="image/*" multiple hidden></label></div>
-  <div id="ly" style="margin-top:8px"></div>
- </div>
- <div class="pane" id="p2">
-  <div class="row"><button class="btn" id="addT">＋ テキスト要素を追加</button></div>
-  <div id="tx" style="margin-top:8px"></div>
- </div>
- <div class="pane" id="p3"><h4>出力設定</h4>
-  <div class="grid" style="grid-template-columns:1fr 1fr;max-width:420px">
-   <label>背景色（出力）<select id="bg">
-    <option value="#00ff00">グリーン（クロマキー）</option><option value="#000000">ブラック（ルミナンスキー）</option>
-    <option value="#0000ff">ブルー</option><option value="transparent">透過（OBS等）</option></select></label>
-   <label>フェード時間(ms)<input type="number" id="fd" value="500" min="0" step="50"></label></div>
-  <hr><h4>キーボード操作</h4>
-   <span class="k">→</span> / <span class="k">Space</span> 次の行　<span class="k">←</span> 前の行<br>
-   <span class="k">↑</span> <span class="k">↓</span> 操作対象のテキスト要素を切替<br>
-   <span class="k">Enter</span> 操作対象の表示／非表示（フェード）<br>
-   <span class="k">Esc</span> 全テキストを非表示　<span class="k">1</span>〜<span class="k">9</span> レイヤー表示切替<br>
-   ※ 入力欄にフォーカス中は無効。出力ウィンドウにフォーカスしていても動作します。
-  <h4>レイヤーページ</h4>
-  一覧の上ほど前面、下ほど背面です（▲で前面へ、▼で背面へ）。左の番号は数字キーに対応します。
-  <h4>テキストページ</h4>
-  1行＝1つの表示内容（歌詞など）。行内の「|」は改行になります。
-  <h4>ATEM Mini Proとの接続</h4>
-  1. 右上「出力ウィンドウを開く」→ ウィンドウをPCの外部ディスプレイ(HDMI出力)へ移動し、ダブルクリックで全画面。<br>
-  2. そのPCのHDMIをATEMの入力へ接続。<br>
-  3. ATEMのKey設定でクロマキー（背景グリーン）またはルミナンスキー（背景ブラック＋白文字）を使用。<br>
-  ※ ATEMは透過信号を扱えないため、背景色キーイングで合成します。
- </div>
-</div>
-<div id="R">
- <button class="btn" id="op" style="width:100%;margin-bottom:10px">出力ウィンドウを開く</button>
- <div class="row"><button id="sv" style="flex:1">保存</button><label class="btn" style="flex:1;text-align:center;cursor:pointer;">読み込み<input type="file" id="ld" accept=".json,application/json" hidden></label></div>
- <div id="pvw"><div id="pv"></div></div>
- <div id="st" style="margin-top:8px"></div>
-</div>
-<datalist id="fl"></datalist>
-<script>
-const $=s=>document.querySelector(s);
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-const S={bg:'#00ff00',fade:500,layers:[],texts:[],active:0};let uid=0,win=null,po=null;
-const FONTS=['BIZ UDPGothic','BIZ UDPMincho Medium',
-  "UD Digi Kyokasho NK",
-  "Yu Gothic Light",
-  "Yu Gothic Regular",
-  "Yu Gothic Medium",
-  "Yu Mincho Light",
-  "Yu Mincho Regular",
-  "Yu Mincho Demibold",
-  "Meiryo",
-  "MS PGothic",
-  "MS PMincho",
-  "Arial",
-  "Calibri",'sans-serif','serif','monospace'];
+  <!doctype html>
+  <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+  <title>LIVE配信テロップシステム</title>
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font:
+      13px/1.4 system-ui,
+      sans-serif;
+    background: #000;
+    color: #fff;
+    display: flex;
+    height: 100vh;
+  }
+  #L {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  #R {
+    width: 50vw;
+    padding: 0.5em;
+    overflow: auto;
+  }
+  .tabs {
+    display: flex;
+    gap: 3px;
+    padding: 4px 4px 0;
+  }
+  .tab {
+    padding: 8px 16px;
+    cursor: pointer;
+    background: #222;
+    color: #aaa;
+  }
+  .tab.on {
+    background: #555;
+    color: #fff;
+  }
+  .pane {
+    display: none;
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #666 #111;
+  }
+  .pane.on {
+    display: block;
+  }
+  button,input,select,textarea,label.btn {
+    font: inherit;
+    color: inherit;
+    background: #000;
+    border: 0.5px solid #777;
+    padding: 4px 8px;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:hover,label.btn:hover {
+    background: #333;
+  }
+  button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  button.on {
+    background: #b00;
+    color: #fff;
+  }
+  .card {
+    background: #111;
+    border: 0.5px solid #777;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .card.act {
+    border: 2px solid #005cc8;
+  }
+  .row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .row input {
+    flex: 1;
+    min-width: 0;
+  }
+  textarea {
+    width: 100%;
+    resize: vertical;
+    font-family: inherit;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .grid label {
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+  }
+  .grid input,
+  .grid select {
+    width: 100%;
+  }
+  .ll {
+    margin-top: 6px;
+    max-height: 160px;
+    overflow: auto;
+    border:1px solid #777;
+  }
+  .ln {
+    padding: 3px 8px;
+    cursor: pointer;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ln:hover {
+    background: #333;
+  }
+  .ln.cur {
+    background: #005cc8;
+    color: #fff;
+  }
+  .th {
+    width: 64px;
+    height: 36px;
+    object-fit: contain;
+    background: repeating-conic-gradient(#555 0 25%, #333 0 50%) 0 0/12px 12px;
+    border-radius: 3px;
+  }
+  .k {
+    background: #444;
+    border-radius: 2px;
+    padding: 1px 6px;
+    font-size: 11px;
+  }
+  #pvw {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    border: 1px solid #444;
+  }
+  #pv {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: 0 0;
+  }
+  h4 {
+    margin: 14px 0 6px;
+  }
+  small,
+  .help {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  summary{cursor:pointer;margin-top:6px;user-select:none}
+  </style></head><body>
+  <div id="L">
+  <div class="tabs"><div class="tab on" data-t="p1">レイヤー</div><div class="tab" data-t="p2">テキスト</div><div class="tab" data-t="p3">出力設定・操作説明</div></div>
+  <div class="pane on" id="p1">
+    <div class="row"><label class="btn" style="cursor:pointer">＋ 画像・動画を追加（複数可）<input type="file" id="fi" accept="image/*,video/*" multiple hidden></label></div>
+    <div id="ly" style="margin-top:8px"></div>
+  </div>
+  <div class="pane" id="p2">
+    <div class="row"><button class="btn" id="addT">＋ テキスト要素を追加</button></div>
+    <div id="tx" style="margin-top:8px"></div>
+  </div>
+  <div class="pane" id="p3"><h4>出力設定</h4>
+    <div class="grid" style="grid-template-columns:1fr 1fr;max-width:420px">
+    <label>背景色（出力）<select id="bg">
+      <option value="#00ff00">グリーン（クロマキー）</option><option value="#000000">ブラック（ルミナンスキー）</option>
+      <option value="#0000ff">ブルー</option><option value="transparent">透過（OBS等）</option></select></label>
+    </div>
+    <hr><h4>キーボード操作</h4>
+    <span class="k">→</span> / <span class="k">Space</span> 次の行　<span class="k">←</span> 前の行<br>
+    <span class="k">↑</span> <span class="k">↓</span> 操作対象のテキスト要素を切替<br>
+    <span class="k">Enter</span> 操作対象の表示／非表示（フェード）<br>
+    <span class="k">0</span> / <span class="k">Delete</span> 全テキストを非表示　<span class="k">1</span>〜<span class="k">9</span> レイヤー表示切替<br>
+    ※ 入力欄にフォーカス中は無効。出力ウィンドウにフォーカスしていても動作します。
+    <h4>レイヤーページ</h4>
+    一覧の上ほど前面、下ほど背面です（▲で前面へ、▼で背面へ）。左の番号は数字キーに対応します。
+    <h4>テキストページ</h4>
+    1行＝1つの表示内容（歌詞など）。行内の「|」は改行になります。<br>
+    行内に <span class="k">@1+</span> <span class="k">@1-</span> <span class="k">@1~</span> と書くと、その行に切り替わった時に、レイヤー1を表示／非表示／切替します（画面には出ません）。
+    <h4>ATEM Mini Proとの接続</h4>
+    1. 右上「出力ウィンドウを開く」→ ウィンドウをPCの外部ディスプレイ(HDMI出力)へ移動し、F11で全画面。<br>
+    <b>ダブルクリックでも全画面にできますが、ポップアップ時に解除されるので注意!!</b><br>
+    2. そのPCのHDMIをATEMの入力へ接続。<br>
+    3. ATEMのKey設定でクロマキー（背景グリーン）またはルミナンスキー（背景ブラック＋白文字）を使用。<br>
+    ※ ATEMは透過信号を扱えないため、背景色キーイングで合成します。
+  </div>
+  </div>
+  <div id="R">
+  <button class="btn" id="op" style="width:100%;margin-bottom:10px">出力ウィンドウを開く</button>
+  <div class="row"><button id="sv" style="flex:1">保存</button><label class="btn" style="flex:1;text-align:center;cursor:pointer;">読み込み<input type="file" id="ld" accept=".json,application/json" hidden></label></div>
+  <div id="pvw"><div id="pv"></div></div>
+  <div id="st" style="margin-top:8px"></div>
+  <div class="row" style="margin-top:6px"><label style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="checkbox" id="fo" checked>フェード</label><input type="number" id="fd" value="500" min="0" step="50" style="flex:none;width:90px">ms<small>（切り替え：F）</small></div></div>
+  <datalist id="fl"></datalist>
+  <script>
+  const $=s=>document.querySelector(s);
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const S={bg:'#00ff00',fade:500,fadeOn:true,layers:[],texts:[],active:0};let uid=0,win=null,po=null;
+  const FONTS=['BIZ UDPGothic','BIZ UDPMincho Medium',
+    "UD Digi Kyokasho NK",
+    "Yu Gothic Light",
+    "Yu Gothic Regular",
+    "Yu Gothic Medium",
+    "Yu Mincho Light",
+    "Yu Mincho Regular",
+    "Yu Mincho Demibold",
+    "Meiryo",
+    "MS PGothic",
+    "MS PMincho",
+    "Arial",
+    "Calibri",'sans-serif','serif','monospace'];
 
-const shadowOf=t=>{
- const L=[],w=t.ow||0;
- if(t.ol&&w>0){const n=Math.min(72,Math.max(16,Math.round(w*8)));
-  for(let k=0;k<n;k++){const a=2*Math.PI*k/n;L.push(`${(Math.cos(a)*w).toFixed(2)}px ${(Math.sin(a)*w).toFixed(2)}px 0 ${t.oc}`)}}
- if(t.sh){const c=Math.max(1,Math.min(10,Math.round(t.sd)||1));for(let k=0;k<c;k++)L.push(`${t.sx}px ${t.sy}px ${t.sb}px ${t.sc}`)}
- return L.length?L.join(','):'none'};
-function Stage(r){this.r=r;this.d=r.ownerDocument;this.L=new Map();this.T=new Map()}
-Stage.prototype.update=function(S){
- const r=this.r,d=this.d,f=S.fade+'ms';r.style.background=S.bg;
- S.layers.forEach((l,i)=>{let e=this.L.get(l.id);if(!e){e=d.createElement('img');e.style.cssText='position:absolute;left:0;top:0;width:1920px;height:1080px';e.src=l.src;r.appendChild(e);this.L.set(l.id,e)}
-  e.style.zIndex=i;e.style.transition='opacity '+f;e.style.opacity=l.on?1:0});
- for(const[id,e]of this.L)if(!S.layers.some(l=>l.id==id)){e.remove();this.L.delete(id)}
- S.texts.forEach((t,i)=>{let e=this.T.get(t.id);if(!e){e=d.createElement('div');e._s=null;r.appendChild(e);this.T.set(t.id,e)}
-  const tx={left:0,center:-50,right:-100}[t.align];
-  e.style.cssText+=`;position:absolute;left:${t.x}px;top:${t.y}px;transform:translate(${tx}%,-50%);z-index:${1000+i};font-family:${t.font};font-weight:${t.bold?700:400};font-size:${t.size}px;line-height:1.25;color:${t.color};text-align:${t.align};white-space:pre;-webkit-text-stroke:0;text-shadow:${shadowOf(t)};transition:opacity ${f}`;  const txt=(t.lines.split('\n')[t.idx]||'').replace(/\|/g,'\n');
-  if(e._s===null){e._s=txt;e.textContent=txt;e.style.opacity=t.on?1:0}
-  else if(txt!==e._s){e._s=txt;
-   if(t.on&&S.fade>0){/* クロスフェード：旧テキストの複製を消しながら、新テキストを同時に表示 */
-    const g=e.cloneNode(true);g.style.transition='none';g.style.opacity=getComputedStyle(e).opacity;r.appendChild(g);
-    e.style.transition='none';e.style.opacity=0;e.textContent=txt;void e.offsetWidth;
-    e.style.transition='opacity '+f+' ease-out';e.style.opacity=1;g.style.transition='opacity '+f+' ease-in';g.style.opacity=0;
-    setTimeout(()=>g.remove(),S.fade+50)}
-   else{e.textContent=txt;e.style.opacity=t.on?1:0}}
-  else e.style.opacity=t.on?1:0});
- for(const[id,e]of this.T)if(!S.texts.some(t=>t.id==id)){e.remove();this.T.delete(id)}
-};
-const pv=new Stage($('#pv'));
-new ResizeObserver(()=>{$('#pv').style.transform=`scale(${$('#pvw').clientWidth/1920})`}).observe($('#pvw'));
-function push(){pv.update(S);if(win&&!win.closed&&po)po.update(S);status()}
-function status(){const t=S.texts[S.active];$('#st').innerHTML=t?`操作対象：<b>${S.active+1}. ${esc(t.name)}</b>（${t.idx+1}/${t.lines.split('\n').length}行目・${t.on?'ON!':'OFF'}）`:'テキスト要素がありません'}
+  const shadowOf=t=>{
+  const L=[],w=t.ow||0;
+  if(t.ol&&w>0){const n=Math.min(72,Math.max(16,Math.round(w*8)));
+    for(let k=0;k<n;k++){const a=2*Math.PI*k/n;L.push(`${(Math.cos(a)*w).toFixed(2)}px ${(Math.sin(a)*w).toFixed(2)}px 0 ${t.oc}`)}}
+  if(t.sh){const c=Math.max(1,Math.min(10,Math.round(t.sd)||1));for(let k=0;k<c;k++)L.push(`${t.sx}px ${t.sy}px ${t.sb}px ${t.sc}`)}
+  return L.length?L.join(','):'none'};
+  function Stage(r){this.r=r;this.d=r.ownerDocument;this.L=new Map();this.T=new Map()}
+  Stage.prototype.update=function(S){
+  const r=this.r,d=this.d,ms=S.fadeOn===false?0:S.fade,f=ms+'ms';r.style.background=S.bg;
+  S.layers.forEach((l,i)=>{let e=this.L.get(l.id);if(!e){e=d.createElement(l.video?'video':'img');e.style.cssText='position:absolute;left:0;top:0;width:1920px;height:1080px;object-fit:contain;object-position:center';
+    if(l.video){e.muted=true;e.playsInline=true;e.preload='auto'}
+    e.src=l.src;r.appendChild(e);this.L.set(l.id,e)}
+    e.style.zIndex=i;e.style.transition='opacity '+f;e.style.opacity=l.on?1:0;
+    if(l.video){const was=!!e._on;e._on=l.on;
+    if(l.on&&!was){clearTimeout(e._h);e.currentTime=0;e.play().catch(()=>{})}
+    else if(!l.on&&was){clearTimeout(e._h);e._h=setTimeout(()=>{e.pause();e.currentTime=0},ms)}}});
+    for(const[id,e]of this.L)if(!S.layers.some(l=>l.id==id)){e.remove();this.L.delete(id)}
+  S.texts.forEach((t,i)=>{let e=this.T.get(t.id);if(!e){e=d.createElement('div');e._s=null;r.appendChild(e);this.T.set(t.id,e)}
+    const tx={left:0,center:-50,right:-100}[t.align];
+    e.style.cssText+=`;position:absolute;left:${t.x}px;top:${t.y}px;transform:translate(${tx}%,-50%);z-index:${1000+i};font-family:${t.font};font-weight:${t.bold?700:400};font-size:${t.size}px;line-height:1.25;color:${t.color};text-align:${t.align};white-space:pre;-webkit-text-stroke:0;text-shadow:${shadowOf(t)};transition:opacity ${f}`;  const txt=(t.lines.split('\n')[t.idx]||'').replace(CMD,'').trim().replace(/\|/g,'\n');
+    if(e._s===null){e._s=txt;e.textContent=txt;e.style.opacity=t.on?1:0}
+  else if(txt!==e._s){const old=e._s;e._s=txt;
+   if(t.on&&ms>0&&!(old&&txt)){/* クロスフェード：旧テキストの複製を消しながら、新テキストを同時に表示 */
+      const g=e.cloneNode(true);g.style.transition='none';g.style.opacity=getComputedStyle(e).opacity;r.appendChild(g);
+      e.style.transition='none';e.style.opacity=0;e.textContent=txt;void e.offsetWidth;
+      e.style.transition='opacity '+f+' ease-out';e.style.opacity=1;g.style.transition='opacity '+f+' ease-in';g.style.opacity=0;
+      setTimeout(()=>g.remove(),ms+50)}
+   else{e.textContent=txt;if(t.on&&old&&txt){e.style.transition='none';e.style.opacity=1;void e.offsetWidth;e.style.transition='opacity '+f}else e.style.opacity=t.on?1:0}}    else e.style.opacity=t.on?1:0});
+  for(const[id,e]of this.T)if(!S.texts.some(t=>t.id==id)){e.remove();this.T.delete(id)}
+  };
+  const pv=new Stage($('#pv'));
+  new ResizeObserver(()=>{$('#pv').style.transform=`scale(${$('#pvw').clientWidth/1920})`}).observe($('#pvw'));
+  function push(){pv.update(S);if(win&&!win.closed&&po)po.update(S);status()}
+  function status(){const t=S.texts[S.active];$('#st').innerHTML=t?`操作対象：<b>${S.active+1}. ${esc(t.name)}</b>（${t.idx+1}/${t.lines.split('\n').length}行目・${t.on?'ON!':'OFF'}）`:'テキスト要素がありません'}
 
-function openOut(){
- if(win&&!win.closed){win.focus();return}
- win=open('','telopOut','width=960,height=540');if(!win){alert('ポップアップがブロックされました。許可してください。');return}
- const d=win.document;d.open();d.write('<!doctype html><meta charset="utf-8"><title>Telop Output</title><body style="margin:0;overflow:hidden;background:#000"><div id="w" style="position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0"></div>');d.close();
- const w=d.getElementById('w');po=new Stage(w);
- const fit=()=>{const s=Math.min(win.innerWidth/1920,win.innerHeight/1080);w.style.transform=`translate(${(win.innerWidth-1920*s)/2}px,${(win.innerHeight-1080*s)/2}px) scale(${s})`};
- fit();win.addEventListener('resize',fit);d.addEventListener('keydown',onKey);
- d.addEventListener('dblclick',()=>d.fullscreenElement?d.exitFullscreen():d.documentElement.requestFullscreen());
- po.update(S);
-}
-$('#op').onclick=openOut;
+  function openOut(){
+  if(win&&!win.closed){win.focus();return}
+  win=open('','telopOut','width=960,height=540');if(!win){alert('ポップアップがブロックされました。許可してください。');return}
+  const d=win.document;d.open();d.write('<!doctype html><meta charset="utf-8"><title>Telop OUTPUT Window</title><body style="margin:0;overflow:hidden;background:#000;cursor:none;"><div id="w" style="position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0"></div>');d.close();
+  const w=d.getElementById('w');po=new Stage(w);
+  const fit=()=>{const s=Math.min(win.innerWidth/1920,win.innerHeight/1080);w.style.transform=`translate(${(win.innerWidth-1920*s)/2}px,${(win.innerHeight-1080*s)/2}px) scale(${s})`};
+  fit();win.addEventListener('resize',fit);d.addEventListener('keydown',onKey);
+  d.addEventListener('dblclick',()=>d.fullscreenElement?d.exitFullscreen():d.documentElement.requestFullscreen({navigationUI:"hide"}).then(()=>win.navigator.keyboard&&win.navigator.keyboard.lock(['Escape'])).catch(()=>{}));
+  po.update(S);
+  }
+  $('#op').onclick=openOut;
 
-/* tabs */
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab,.pane').forEach(x=>x.classList.remove('on'));t.classList.add('on');$('#'+t.dataset.t).classList.add('on')});
+  /* tabs */
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab,.pane').forEach(x=>x.classList.remove('on'));t.classList.add('on');$('#'+t.dataset.t).classList.add('on');scrollCur()});
 
-/* layers */
-$('#fi').onchange=async e=>{const fs=[...e.target.files].sort((a,b)=>a.name.localeCompare(b.name,'ja',{numeric:true}));
- for(const f of fs){const src=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});S.layers.push({id:++uid,name:f.name,src,on:true})}
- e.target.value='';renderLayers();push()};
-function renderLayers(){$('#ly').innerHTML=S.layers.map((l,i)=>`<div class="card" data-i="${i}"><div class="row"><img class="th" src="${l.src}"><span class="k">${i<9?i+1:'-'}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.name)}</span>
- <button data-a="tog" class="${l.on?'on':''}">${l.on?'ON!':'OFF'}</button><button data-a="up"${i==S.layers.length-1?' disabled':''}>▲</button><button data-a="dn"${i==0?' disabled':''}>▼</button><button data-a="del">✕</button></div></div>`).reverse().join('')||'画像が未追加です'}
-$('#ly').onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const i=+b.closest('[data-i]').dataset.i,a=b.dataset.a,L=S.layers;
- if(a=='tog')L[i].on=!L[i].on;else if(a=='del')L.splice(i,1);
- else if(a=='up'&&i<L.length-1)[L[i],L[i+1]]=[L[i+1],L[i]];else if(a=='dn'&&i>0)[L[i],L[i-1]]=[L[i-1],L[i]];
- renderLayers();push()};
+  /* layers */
+  $('#fi').onchange=async e=>{const fs=[...e.target.files].sort((a,b)=>a.name.localeCompare(b.name,'ja',{numeric:true}));
+  for(const f of fs){const src=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});S.layers.push({id:++uid,name:f.name,src,video:f.type.startsWith('video/'),on:false})}
+  e.target.value='';renderLayers();push()};
+  function renderLayers(){$('#ly').innerHTML=S.layers.map((l,i)=>`<div class="card" data-i="${i}"><div class="row">${l.video?'<div class="th" style="display:flex;align-items:center;justify-content:center">🎬</div>':`<img class="th" src="${l.src}">`}<span class="k">${i<9?i+1:'-'}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.name)}</span>
+  <button data-a="tog" class="${l.on?'on':''}">${l.on?'ON!':'OFF'}</button><button data-a="up"${i==S.layers.length-1?' disabled':''}>▲</button><button data-a="dn"${i==0?' disabled':''}>▼</button><button data-a="del">✕</button></div></div>`).reverse().join('')||'画像が未追加です'}
+  $('#ly').onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const i=+b.closest('[data-i]').dataset.i,a=b.dataset.a,L=S.layers;
+  if(a=='tog')L[i].on=!L[i].on;else if(a=='del')L.splice(i,1);
+  else if(a=='up'&&i<L.length-1)[L[i],L[i+1]]=[L[i+1],L[i]];else if(a=='dn'&&i>0)[L[i],L[i-1]]=[L[i-1],L[i]];
+  renderLayers();push()};
 
-/* texts */
-function newText(){return{id:++uid,name:'テキスト',lines:'1行目\n2行目\n3行目',idx:0,x:960,y:920,size:64,color:'#ffffff',font:"'BIZ UDPGothic',sans-serif",align:'center',bold:true,sh:true,sx:3,sy:3,sb:6,sd:4,sc:'#000000',ol:false,ow:4,oc:'#000000',on:false}}
-$('#addT').onclick=()=>{S.texts.push(newText());S.active=S.texts.length-1;renderTexts();push()};
-const nf=(k,l,v)=>`<label>${l}<input type="number" data-k="${k}" value="${v}"></label>`;
-function lineList(t,i){return t.lines.split('\n').map((s,j)=>`<div class="ln${j==t.idx?' cur':''}" data-a="ln" data-j="${j}">${j+1}. ${esc(s)||'(空)'}</div>`).join('')}
-function renderTexts(){$('#tx').innerHTML=S.texts.map((t,i)=>`<div class="card${i==S.active?' act':''}" data-i="${i}">
- <div class="row"><b>${i+1}</b><input data-k="name" value="${esc(t.name)}"><button data-a="tog" class="${t.on?'on':''}">${t.on?'ON!':'OFF'}</button><button data-a="prev">◀</button><button data-a="next">▶</button><button data-a="del">✕</button></div>
- <div class="ll">${lineList(t,i)}</div><details${t.open?' open':''}><summary>設定</summary><textarea data-k="lines" rows="5">${esc(t.lines)}</textarea>
- <div class="grid">${nf('x','X位置',t.x)}${nf('y','Y位置',t.y)}${nf('size','サイズ',t.size)}<label>色<input type="color" data-k="color" value="${t.color}"></label>
- <label style="grid-column:span 2">font-family（CSSの値をそのまま入力）<input list="fl" data-k="font" value="${esc(t.font)}" placeholder="例: 'Yu Mincho', serif"></label>
- <label>揃え<select data-k="align">${['left','center','right'].map(a=>`<option${a==t.align?' selected':''}>${a}</option>`).join('')}</select></label>
- <label>太字<input type="checkbox" data-k="bold"${t.bold?' checked':''}></label><label>ドロップシャドウ<input type="checkbox" data-k="sh"${t.sh?' checked':''}></label>
- ${nf('sx','影X',t.sx)}${nf('sy','影Y',t.sy)}${nf('sb','影ぼかし',t.sb)}<label>影の濃さ(1-10)<input type="number" data-k="sd" value="${t.sd}" min="1" max="10"></label><label>影色<input type="color" data-k="sc" value="${t.sc}"></label>
- <label>アウトライン<input type="checkbox" data-k="ol"${t.ol?' checked':''}></label>${nf('ow','線の幅',t.ow)}<label>線の色<input type="color" data-k="oc" value="${t.oc}"></label></div></details></div>`).join('')||'<small>テキスト要素が未追加です</small>';status()}
-$('#tx').addEventListener('input',e=>{const t=e.target,c=t.closest('[data-i]');if(!t.dataset.k)return;const i=+c.dataset.i,o=S.texts[i];
- o[t.dataset.k]=t.type=='checkbox'?t.checked:t.type=='number'?(+t.value||0):t.value;
- if(t.dataset.k=='lines'){o.idx=Math.min(o.idx,o.lines.split('\n').length-1);c.querySelector('.ll').innerHTML=lineList(o,i)}push()});
-$('#tx').addEventListener('focusin',e=>{const c=e.target.closest('[data-i]');if(!c)return;S.active=+c.dataset.i;document.querySelectorAll('#tx .card').forEach((x,i)=>x.classList.toggle('act',i==S.active));status()});
-$('#tx').onclick=e=>{b=e.target.closest('[data-a]');if(!b)return;const i=+b.closest('[data-i]').dataset.i,a=b.dataset.a;S.active=i;
- if(a=='tog')S.texts[i].on=!S.texts[i].on;else if(a=='del'){if (!window.confirm("本当に削除しますか？")) return;S.texts.splice(i,1);S.active=Math.max(0,Math.min(S.active,S.texts.length-1))}
- else if(a=='prev')step(i,-1);else if(a=='next')step(i,1);else if(a=='ln')S.texts[i].idx=+b.dataset.j;
- renderTexts();push()};
-$('#tx').addEventListener('toggle',e=>{const d=e.target.closest('details');if(d)S.texts[+d.closest('[data-i]').dataset.i].open=d.open},true);
-function step(i,d){const t=S.texts[i];if(!t)return;t.idx=Math.max(0,Math.min(t.lines.split('\n').length-1,t.idx+d))}
+  /* texts */
+  function newText(){return{id:++uid,name:'テキスト',lines:'1行目\n2行目\n3行目',idx:0,x:960,y:920,size:64,color:'#ffffff',font:"'BIZ UDPGothic',sans-serif",align:'center',bold:true,sh:true,sx:3,sy:3,sb:6,sd:4,sc:'#000000',ol:false,ow:4,oc:'#000000',on:false}}
+  $('#addT').onclick=()=>{S.texts.push(newText());S.active=S.texts.length-1;renderTexts();push()};
+  const nf=(k,l,v)=>`<label>${l}<input type="number" data-k="${k}" value="${v}"></label>`;
+  function lineList(t,i){return t.lines.split('\n').map((s,j)=>`<div class="ln${j==t.idx?' cur':''}" data-a="ln" data-j="${j}">${j+1}. ${esc(s)||'(空)'}</div>`).join('')}
+  function renderTexts(){$('#tx').innerHTML=S.texts.map((t,i)=>`<div class="card${i==S.active?' act':''}" data-i="${i}">
+  <div class="row"><b>${i+1}</b><input data-k="name" value="${esc(t.name)}"><button data-a="tog" class="${t.on?'on':''}">${t.on?'ON!':'OFF'}</button><button data-a="prev">◀</button><button data-a="next">▶</button><button data-a="del">✕</button></div>
+  <div class="ll">${lineList(t,i)}</div><details${t.open?' open':''}><summary>設定</summary><textarea data-k="lines" rows="5">${esc(t.lines)}</textarea>
+  <div class="grid">${nf('x','X位置',t.x)}${nf('y','Y位置',t.y)}${nf('size','サイズ',t.size)}<label>色<input type="color" data-k="color" value="${t.color}"></label>
+  <label style="grid-column:span 2">font-family（CSSの値をそのまま入力）<input list="fl" data-k="font" value="${esc(t.font)}" placeholder="例: 'Yu Mincho', serif"></label>
+  <label>揃え<select data-k="align">${['left','center','right'].map(a=>`<option${a==t.align?' selected':''}>${a}</option>`).join('')}</select></label>
+  <label>太字<input type="checkbox" data-k="bold"${t.bold?' checked':''}></label><label>ドロップシャドウ<input type="checkbox" data-k="sh"${t.sh?' checked':''}></label>
+  ${nf('sx','影X',t.sx)}${nf('sy','影Y',t.sy)}${nf('sb','影ぼかし',t.sb)}<label>影の濃さ(1-10)<input type="number" data-k="sd" value="${t.sd}" min="1" max="10"></label><label>影色<input type="color" data-k="sc" value="${t.sc}"></label>
+  <label>アウトライン<input type="checkbox" data-k="ol"${t.ol?' checked':''}></label>${nf('ow','線の幅',t.ow)}<label>線の色<input type="color" data-k="oc" value="${t.oc}"></label></div></details></div>`).join('')||'<small>テキスト要素が未追加です</small>';status();
+  scrollCur();document.querySelector('#tx .card.act')?.scrollIntoView({block:'nearest'});}
+  $('#tx').addEventListener('input',e=>{const t=e.target,c=t.closest('[data-i]');if(!t.dataset.k)return;const i=+c.dataset.i,o=S.texts[i];
+  o[t.dataset.k]=t.type=='checkbox'?t.checked:t.type=='number'?(+t.value||0):t.value;
+  if(t.dataset.k=='lines'){o.idx=Math.min(o.idx,o.lines.split('\n').length-1);c.querySelector('.ll').innerHTML=lineList(o,i);scrollCur()}push()});
+  $('#tx').addEventListener('focusin',e=>{const c=e.target.closest('[data-i]');if(!c)return;S.active=+c.dataset.i;document.querySelectorAll('#tx .card').forEach((x,i)=>x.classList.toggle('act',i==S.active));status()});
+  $('#tx').onclick=e=>{b=e.target.closest('[data-a]');if(!b)return;const i=+b.closest('[data-i]').dataset.i,a=b.dataset.a;S.active=i;
+  if(a=='tog')S.texts[i].on=!S.texts[i].on;else if(a=='del'){if (!window.confirm("本当に削除しますか？")) return;S.texts.splice(i,1);S.active=Math.max(0,Math.min(S.active,S.texts.length-1))}
+  else if(a=='prev')step(i,-1);else if(a=='next')step(i,1);else if(a=='ln'){const t=S.texts[i],j=+b.dataset.j;if(t.idx!=j){t.idx=j;runCmds(t)}}
+  renderTexts();push()};
+  $('#tx').addEventListener('toggle',e=>{const d=e.target.closest('details');if(d)S.texts[+d.closest('[data-i]').dataset.i].open=d.open},true);
+  const CMD=/@(\d+)([+\-~])/g;
+  function runCmds(t){const line=t.lines.split('\n')[t.idx]||'';
+  for(const m of line.matchAll(CMD)){const l=S.layers[m[1]-1];if(!l)continue;l.on=m[2]=='+'?true:m[2]=='-'?false:!l.on}
+  renderLayers()}
+  function step(i,d){const t=S.texts[i];if(!t)return;const o=t.idx;t.idx=Math.max(0,Math.min(t.lines.split('\n').length-1,t.idx+d));if(t.idx!==o)runCmds(t)}  function scrollCur(){document.querySelectorAll('#tx .ll').forEach(l=>{const c=l.querySelector('.cur');if(!c)return;
+  l.scrollTop+=c.getBoundingClientRect().top-l.getBoundingClientRect().top-l.clientHeight/2+c.offsetHeight/2})}
 
-/* settings */
-$('#bg').onchange=e=>{S.bg=e.target.value;push()};
-$('#fd').oninput=e=>{S.fade=Math.max(0,+e.target.value||0);push()};
+  /* settings */
+  $('#bg').onchange=e=>{S.bg=e.target.value;push()};
+  $('#fd').oninput=e=>{S.fade=Math.max(0,+e.target.value||0);push()};
+  function setFade(v){S.fadeOn=v;$('#fo').checked=v;$('#fd').disabled=!v;push()}
+  $('#fo').onchange=e=>{setFade(e.target.checked);e.target.blur()};
 
-/* save / load */
-$('#sv').onclick=()=>{const a=document.createElement('a');
- a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,bg:S.bg,fade:S.fade,layers:S.layers,texts:S.texts})],{type:'application/json'}));
- const n=new Date(),p=x=>String(x).padStart(2,'0');
- a.download=`telop-${n.getFullYear()}${p(n.getMonth()+1)}${p(n.getDate())}-${p(n.getHours())}${p(n.getMinutes())}.json`;
- document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
-$('#ld').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
- if((S.layers.length||S.texts.length)&&!confirm('現在の内容を置き換えます。よろしいですか？'))return;
- try{const j=JSON.parse(await f.text());if(!Array.isArray(j.layers)||!Array.isArray(j.texts))throw 0;
-  S.bg=j.bg||'#00ff00';S.fade=+j.fade>=0?+j.fade:500;
-  S.layers=j.layers.map(l=>({...l,id:++uid}));S.texts=j.texts.map(t=>({...newText(),...t,id:++uid}));S.active=0;
-  $('#bg').value=S.bg;$('#fd').value=S.fade;renderLayers();renderTexts();push()}
- catch(err){alert('設定ファイルを読み込めませんでした')}};
+  /* save / load */
+  $('#sv').onclick=()=>{const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,bg:S.bg,fade:S.fade,fadeOn:S.fadeOn,layers:S.layers,texts:S.texts})],{type:'application/json'}));
+  const n=new Date(),p=x=>String(x).padStart(2,'0');
+  a.download=`telop-${n.getFullYear()}${p(n.getMonth()+1)}${p(n.getDate())}-${p(n.getHours())}${p(n.getMinutes())}.json`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+  $('#ld').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  if((S.layers.length||S.texts.length)&&!confirm('現在の内容を置き換えます。よろしいですか？'))return;
+  try{const j=JSON.parse(await f.text());if(!Array.isArray(j.layers)||!Array.isArray(j.texts))throw 0;
+    S.bg=j.bg||'#00ff00';S.fade=+j.fade>=0?+j.fade:500;
+    S.fadeOn=j.fadeOn!==false;$('#fo').checked=S.fadeOn;$('#fd').disabled=!S.fadeOn;
+    S.layers=j.layers.map(l=>({...l,id:++uid}));S.texts=j.texts.map(t=>({...newText(),...t,id:++uid}));S.active=0;
+    $('#bg').value=S.bg;$('#fd').value=S.fade;renderLayers();renderTexts();push()}
+  catch(err){alert('設定ファイルを読み込めませんでした')}};
 
-/* keyboard */
-function onKey(e){const el=e.target,tg=el.tagName;
- if(tg=='TEXTAREA'||tg=='SELECT'||(tg=='INPUT'&&!['checkbox','file','color'].includes(el.type)))return;
- if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key,t=S.texts[S.active];let h=1;
- if(k=='ArrowRight'||k==' '||k=='PageDown')step(S.active,1);
- else if(k=='ArrowLeft'||k=='PageUp')step(S.active,-1);
- else if(k=='ArrowUp')S.active=Math.max(0,S.active-1);
- else if(k=='ArrowDown')S.active=Math.min(S.texts.length-1,S.active+1);
- else if(k=='Enter'){if(t)t.on=!t.on}
- else if(k=='Escape')S.texts.forEach(x=>x.on=false);
- else if(/^[1-9]$/.test(k)){const l=S.layers[+k-1];if(l){l.on=!l.on;renderLayers()}}
- else h=0;
- if(h){e.preventDefault();if(el.blur&&tg=='BUTTON')el.blur();renderTexts();push()}}
-document.addEventListener('keydown',onKey);
+  /* keyboard */
+  function onKey(e){const el=e.target,tg=el.tagName;
+  if(tg=='TEXTAREA'||tg=='SELECT'||(tg=='INPUT'&&!['checkbox','file','color'].includes(el.type)))return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key,t=S.texts[S.active];let h=1;
+  if(k=='ArrowRight'||k==' '||k=='PageDown')step(S.active,1);
+  else if(k=='ArrowLeft'||k=='PageUp')step(S.active,-1);
+  else if(k=='ArrowUp')S.active=Math.max(0,S.active-1);
+  else if(k=='ArrowDown')S.active=Math.min(S.texts.length-1,S.active+1);
+  else if(k=='Enter'){if(t)t.on=!t.on}
+  else if(k=='0'||k=='Delete')S.texts.forEach(x=>x.on=false);
+  else if(k=='f'||k=='F')setFade(!S.fadeOn);
+  else if(/^[1-9]$/.test(k)){const l=S.layers[+k-1];if(l){l.on=!l.on;renderLayers()}}
+  else h=0;
+  if(h){e.preventDefault();if(el.blur&&tg=='BUTTON')el.blur();renderTexts();push()}}
+  document.addEventListener('keydown',onKey);
 
-$('#fl').innerHTML=FONTS.map(f=>`<option value="${f}">`).join('');S.texts.push(newText());renderLayers();renderTexts();push();
-</script></body></html>
+  $('#fl').innerHTML=FONTS.map(f=>`<option value="${f}">`).join('');S.texts.push(newText());renderLayers();renderTexts();push();
+  $('#fd').addEventListener('keydown',e=>{if(e.key=='Enter')e.target.blur()});$('#fd').onchange=e=>e.target.blur();
+
+  window.addEventListener('beforeunload', function (e) {e.returnValue = '本当に移動しますか？';});
+  </script></body></html>
